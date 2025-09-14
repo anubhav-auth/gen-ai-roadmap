@@ -3,39 +3,505 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculator App</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Junior GenAI Engineer - 18 Hour Prep Plan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals with Blue Accent -->
+    <!-- Application Structure Plan: The SPA is structured as a task-oriented dashboard with four main, navigable sections: 'Dashboard' (overview), 'Prep Plan' (timeline), 'Project' (build guide), and 'Key Concepts' (cheatsheet). This structure was chosen over a simple linear report to provide a goal-oriented, interactive experience. It allows the user to quickly grasp priorities, dive into a structured timeline, focus on a tangible project, and use a quick reference, which is the most effective way to prepare under a tight 18-hour deadline. The navigation enables non-linear exploration based on the user's immediate needs. -->
+    <!-- Visualization & Content Choices: 
+        1. Job Focus Donut Chart: Report Info -> Focus Areas. Goal -> Inform priority. Viz -> Chart.js Donut. Interaction -> Hover tooltips. Justification -> Visual breakdown of core skills.
+        2. Time Allocation Bar Chart: Report Info -> My time breakdown. Goal -> Compare time investment. Viz -> Chart.js Bar Chart. Interaction -> Hover tooltips. Justification -> Clear visual comparison of study blocks.
+        3. Interactive Timeline: Report Info -> Prep plan steps. Goal -> Organize tasks chronologically. Method -> HTML/CSS with JS for expand/collapse. Interaction -> Click to reveal details, checkbox for progress. Justification -> Breaks down the intense 18-hour schedule into manageable, interactive steps.
+        4. Project Architecture Diagram: Report Info -> RAG pipeline flow. Goal -> Organize project components. Method -> HTML/CSS flexbox/grid. Interaction -> Hover effects. Justification -> Provides a clear, easy-to-understand visual of the project architecture without external images or libraries.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f7f4;
+            color: #2c3e50;
+        }
+        .nav-link {
+            transition: all 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: all 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .timeline-item .content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .timeline-item.open .content {
+            max-height: 1000px;
+        }
+        .arch-box {
+            border: 2px solid #9ca3af;
+            background-color: #f9fafb;
+            position: relative;
+        }
+        .arch-arrow {
+            position: absolute;
+            font-size: 1.5rem;
+            color: #6b7280;
+        }
+        .arch-box:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            top: 50%;
+            right: -2rem;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: #3b82f6;
+        }
+        @media (max-width: 768px) {
+            .arch-box:not(:last-child)::after {
+                content: '↓';
+                top: 100%;
+                right: 50%;
+                transform: translateX(50%) translateY(0.25rem);
+            }
+        }
+    </style>
 </head>
-<body>
-    <div class="calculator">
-        <div class="display">
-            <input type="text" id="result" readonly placeholder="0">
-        </div>
-        <div class="buttons">
-            <button class="btn clear" onclick="clearDisplay()">C</button>
-            <button class="btn operator" onclick="deleteLast()">⌫</button>
-            <button class="btn operator" onclick="appendToDisplay('/')">/</button>
-            <button class="btn operator" onclick="appendToDisplay('*')">×</button>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-gray-800">GenAI Interview Prep</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#dashboard" class="nav-link active px-3 py-2 rounded-md text-sm font-medium">Dashboard</a>
+                        <a href="#plan" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Prep Plan</a>
+                        <a href="#project" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Project</a>
+                        <a href="#concepts" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Key Concepts</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                     <select id="mobile-nav" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="#dashboard">Dashboard</option>
+                        <option value="#plan">Prep Plan</option>
+                        <option value="#project">Project</option>
+                        <option value="#concepts">Key Concepts</option>
+                    </select>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        
+        <section id="dashboard" class="view">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Your 18-Hour Roadmap to Success</h2>
+                <p class="mt-2 text-lg text-gray-600">For the role: <span class="font-semibold">Junior Engineer – GenAI & Agentic AI Solutions</span></p>
+            </div>
+
+            <div class="card p-6 mb-8">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 md:mb-0">Time Remaining:</h3>
+                    <div id="countdown" class="text-4xl font-bold tracking-wider text-blue-600 bg-blue-50 p-4 rounded-lg">
+                        18:00:00
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-2 card p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Key Focus Areas Breakdown</h3>
+                    <p class="text-gray-600 mb-6">The interview will center on five core competencies. This chart visualizes their importance based on the job description. Prioritize your study time accordingly.</p>
+                    <div class="chart-container relative h-80 w-full max-w-lg mx-auto">
+                        <canvas id="focusAreasChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6 flex flex-col justify-center">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Job Responsibilities</h3>
+                    <p class="text-gray-600 mb-6">This role requires a blend of hands-on coding, pipeline management, and staying current with the latest in GenAI. Familiarize yourself with these core duties.</p>
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-center"><span class="text-blue-500 mr-2">►</span> Build & maintain AI/ML pipelines</li>
+                        <li class="flex items-center"><span class="text-blue-500 mr-2">►</span> Implement RAG in production apps</li>
+                        <li class="flex items-center"><span class="text-blue-500 mr-2">►</span> Develop & integrate scalable APIs</li>
+                        <li class="flex items-center"><span class="text-blue-500 mr-2">►</span> Experiment with LLMs & AIML models</li>
+                        <li class="flex items-center"><span class="text-blue-500 mr-2">►</span> Handle data preprocessing & ingestion</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="plan" class="view hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">The 18-Hour Preparation Plan</h2>
+                <p class="mt-2 text-lg text-gray-600">A step-by-step, time-boxed schedule to cover all bases efficiently.</p>
+            </div>
+
+             <div class="card p-6 mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-gray-800">Time Allocation Strategy</h3>
+                <p class="text-gray-600 mb-6">Your 18 hours are strategically divided between foundational theory, hands-on project work, and final review. This ensures a balanced and deep preparation.</p>
+                <div class="chart-container relative h-80 w-full max-w-3xl mx-auto">
+                    <canvas id="timeAllocationChart"></canvas>
+                </div>
+            </div>
+
+            <div class="relative mt-8">
+                <div class="absolute left-1/2 -ml-px w-0.5 h-full bg-gray-300 hidden md:block"></div>
+                
+                <div id="timeline-container" class="space-y-12">
+                </div>
+
+            </div>
+        </section>
+
+        <section id="project" class="view hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Impressive Project: RAG Q&A API</h2>
+                <p class="mt-2 text-lg text-gray-600">Build and present this project to demonstrate your practical skills in RAG, Python, and API development.</p>
+            </div>
+            <div class="card p-8">
+                 <h3 class="text-2xl font-bold text-gray-800 mb-4">Project Overview</h3>
+                 <p class="text-gray-600 mb-6">Create a simple but powerful Question-Answering API using the RAG pattern. The API will take a question, find relevant information from a local document (e.g., a research paper on Agentic AI), and use an LLM to generate a concise answer. This project directly showcases your ability to build production-grade GenAI applications.</p>
+                
+                 <h3 class="text-xl font-semibold text-gray-800 my-6">System Architecture</h3>
+                 <p class="text-gray-600 mb-8">This flow demonstrates a classic RAG pipeline. Understanding and explaining this architecture is key. You'll ingest a document, process user queries against it, and serve answers via a web endpoint.</p>
+                 <div class="flex flex-col md:flex-row md:space-x-8 space-y-8 md:space-y-0 items-center justify-center text-center p-4">
+                     <div class="arch-box p-4 rounded-lg w-48 h-24 flex items-center justify-center">User Query</div>
+                     <div class="arch-box p-4 rounded-lg w-48 h-24 flex items-center justify-center">FastAPI Endpoint</div>
+                     <div class="arch-box p-4 rounded-lg w-48 h-24 flex items-center justify-center">Vector DB Search</div>
+                     <div class="arch-box p-4 rounded-lg w-48 h-24 flex items-center justify-center">LLM Prompting</div>
+                     <div class="arch-box p-4 rounded-lg w-48 h-24 flex items-center justify-center">Generated Answer</div>
+                 </div>
+
+                 <h3 class="text-xl font-semibold text-gray-800 my-8">Implementation Steps</h3>
+                 <div class="space-y-4">
+                    <details class="group p-4 bg-gray-50 rounded-lg">
+                        <summary class="font-medium cursor-pointer list-none flex justify-between items-center">
+                            1. Setup & Dependencies
+                            <span class="group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="mt-4 text-gray-600">
+                           <p>Create a virtual environment. Then, install the necessary libraries. FAISS is for vector storage, sentence-transformers for embeddings, LangChain for orchestration, and FastAPI for the API.</p>
+                           <pre class="bg-gray-800 text-white p-4 rounded-md mt-2 text-sm overflow-x-auto"><code>pip install langchain sentence-transformers faiss-cpu fastapi uvicorn python-multipart pypdf</code></pre>
+                        </div>
+                    </details>
+                    <details class="group p-4 bg-gray-50 rounded-lg">
+                        <summary class="font-medium cursor-pointer list-none flex justify-between items-center">
+                            2. Data Ingestion & Chunking
+                             <span class="group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="mt-4 text-gray-600">
+                           <p>Download a relevant PDF (e.g., an AI research paper). Use LangChain's loaders to load and split the document into smaller, manageable chunks. This is crucial for effective retrieval.</p>
+                            <pre class="bg-gray-800 text-white p-4 rounded-md mt-2 text-sm overflow-x-auto"><code>from langchain.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+
+loader = PyPDFLoader("your_document.pdf")
+docs = loader.load()
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+texts = text_splitter.split_documents(docs)</code></pre>
+                        </div>
+                    </details>
+                     <details class="group p-4 bg-gray-50 rounded-lg">
+                        <summary class="font-medium cursor-pointer list-none flex justify-between items-center">
+                            3. Embedding & Vector Store
+                             <span class="group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="mt-4 text-gray-600">
+                           <p>Use a sentence-transformer model to convert text chunks into numerical vectors (embeddings). Store these vectors in a FAISS vector store for fast similarity searching.</p>
+                            <pre class="bg-gray-800 text-white p-4 rounded-md mt-2 text-sm overflow-x-auto"><code>from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.vectorstores import FAISS
+
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+vectorstore = FAISS.from_documents(texts, embeddings)
+vectorstore.save_local("faiss_index")</code></pre>
+                        </div>
+                    </details>
+                    <details class="group p-4 bg-gray-50 rounded-lg">
+                        <summary class="font-medium cursor-pointer list-none flex justify-between items-center">
+                            4. API with FastAPI
+                             <span class="group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="mt-4 text-gray-600">
+                           <p>Wrap your logic in a FastAPI application. Create an endpoint that accepts a user's question, performs the RAG process, and returns the answer. Note: You'll need an LLM; for this project, you can use a free API or a local model via libraries like Ollama.</p>
+                             <pre class="bg-gray-800 text-white p-4 rounded-md mt-2 text-sm overflow-x-auto"><code>from fastapi import FastAPI
+
+app = FastAPI()
+# Load your vectorstore and LLM here
+
+@app.post("/ask")
+async def ask_question(query: str):
+    # 1. Search vectorstore for relevant docs
+    # 2. Construct prompt with context and query
+    # 3. Call LLM to get answer
+    # 4. Return answer
+    return {"answer": "This is where the LLM response goes."}
+</code></pre>
+                        </div>
+                    </details>
+                 </div>
+                 
+                 <h3 class="text-xl font-semibold text-gray-800 my-8">Interview Talking Points</h3>
+                 <ul class="list-disc list-inside space-y-2 text-gray-700">
+                    <li><b>Demonstrates RAG:</b> "This project is a hands-on implementation of the core RAG pattern, crucial for reducing hallucinations and using proprietary data."</li>
+                    <li><b>Production-Ready API:</b> "I chose FastAPI because it's high-performance and standard for building production-grade ML APIs in Python."</li>
+                    <li><b>Scalability Discussion:</b> "While this uses a local FAISS index, it can be scaled by using a dedicated vector database like Pinecone or Weaviate for larger applications."</li>
+                    <li><b>Component-Based Design:</b> "The pipeline is modular. We can easily swap out the embedding model, the vector store, or the LLM to optimize for performance or cost."</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="concepts" class="view hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Key Concepts Cheatsheet</h2>
+                <p class="mt-2 text-lg text-gray-600">Quick-reference guide for essential topics and potential interview questions.</p>
+            </div>
+            <div class="space-y-4" id="concepts-container">
+                
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const focusData = {
+                labels: ['GenAI', 'Agentic AI', 'RAG', 'Python', 'API Development'],
+                datasets: [{
+                    label: 'Focus Area Importance',
+                    data: [30, 20, 25, 15, 10],
+                    backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ef4444'],
+                    hoverOffset: 4
+                }]
+            };
+
+            const timeAllocationData = {
+                labels: ['Foundation Concepts', 'RAG Deep Dive', 'Project Build', 'API Concepts', 'Review & Practice'],
+                datasets: [{
+                    label: 'Hours Allocated',
+                    data: [4, 3, 8, 1, 2],
+                     backgroundColor: ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ef4444'],
+                    borderColor: '#ffffff',
+                    borderWidth: 1
+                }]
+            };
+
+            const focusChartCtx = document.getElementById('focusAreasChart').getContext('2d');
+            new Chart(focusChartCtx, {
+                type: 'doughnut',
+                data: focusData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: { callbacks: { label: (context) => `${context.label}: ${context.raw}%` } }
+                    }
+                }
+            });
             
-            <button class="btn number" onclick="appendToDisplay('7')">7</button>
-            <button class="btn number" onclick="appendToDisplay('8')">8</button>
-            <button class="btn number" onclick="appendToDisplay('9')">9</button>
-            <button class="btn operator" onclick="appendToDisplay('-')">-</button>
+            const timeAllocationChartCtx = document.getElementById('timeAllocationChart').getContext('2d');
+            new Chart(timeAllocationChartCtx, {
+                type: 'bar',
+                data: timeAllocationData,
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { x: { beginAtZero: true, title: { display: true, text: 'Hours' } } },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const timelineData = [
+                {
+                    phase: 'Phase 1: Foundations (Hours 0-7)',
+                    items: [
+                        { time: 'Hours 0-2', title: 'Core GenAI & LLM Concepts', tasks: ['Review Transformer architecture (self-attention).', 'Understand key terms: tokens, context window, temperature.', 'Differentiate between base models and instruction-tuned models.'] },
+                        { time: 'Hours 2-4', title: 'Agentic AI Principles', tasks: ['Define what an AI Agent is (perception, planning, action).', 'Learn about agentic patterns like ReAct (Reason+Act).', 'Research common agent frameworks (e.g., LangChain Agents, AutoGPT).'] },
+                        { time: 'Hours 4-7', title: 'RAG Pipeline Deep Dive', tasks: ['Map out the entire RAG flow: Load -> Split -> Embed -> Store -> Retrieve -> Generate.', 'Understand the role of vector databases (e.g., FAISS, Pinecone).', 'Compare different text embedding models (e.g., from SentenceTransformers).'] }
+                    ]
+                },
+                {
+                    phase: 'Phase 2: Practical Application (Hours 7-15)',
+                    items: [
+                        { time: 'Hours 7-15', title: 'Project: RAG Q&A API', tasks: ['Follow the project guide to build the application.', 'Focus on understanding each line of code, not just copy-pasting.', 'Test the API endpoint thoroughly with different questions.', 'Prepare to explain your code and design choices clearly.'] }
+                    ]
+                },
+                {
+                    phase: 'Phase 3: Review & Polish (Hours 15-18)',
+                    items: [
+                        { time: 'Hours 15-16', title: 'API & Python Review', tasks: ['Review REST API principles (GET, POST, status codes).', 'Solidify Python concepts: virtual environments, data structures, async programming (for FastAPI).'] },
+                        { time: 'Hours 16-18', title: 'Mock Interview & Storytelling', tasks: ['Practice explaining your project out loud.', 'Review the Key Concepts cheatsheet and answer sample questions.', 'Prepare your own questions for the interviewer.'] }
+                    ]
+                }
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineData.forEach(phase => {
+                const phaseHtml = `
+                    <div class="mb-8">
+                        <h3 class="text-2xl font-semibold text-center text-blue-600 mb-6">${phase.phase}</h3>
+                        ${phase.items.map(item => `
+                            <div class="timeline-item flex md:justify-center items-start mb-6">
+                                <div class="hidden md:flex flex-col items-center mr-4">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">${phase.items.indexOf(item) + 1}</div>
+                                </div>
+                                <div class="card w-full md:w-2/5 p-4 cursor-pointer" onclick="toggleTimelineItem(this)">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <p class="text-sm text-gray-500">${item.time}</p>
+                                            <h4 class="font-semibold text-lg">${item.title}</h4>
+                                        </div>
+                                        <span class="text-xl text-gray-400 transform transition-transform">▼</span>
+                                    </div>
+                                    <div class="content mt-4 border-t pt-4 text-gray-600">
+                                        <ul class="space-y-2">
+                                            ${item.tasks.map(task => `
+                                                <li class="flex items-start">
+                                                    <input type="checkbox" class="mt-1 mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                                    <span>${task}</span>
+                                                </li>`).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                timelineContainer.innerHTML += phaseHtml;
+            });
             
-            <button class="btn number" onclick="appendToDisplay('4')">4</button>
-            <button class="btn number" onclick="appendToDisplay('5')">5</button>
-            <button class="btn number" onclick="appendToDisplay('6')">6</button>
-            <button class="btn operator" onclick="appendToDisplay('+')">+</button>
+            const conceptsData = [
+                { 
+                    title: 'Generative AI (GenAI)',
+                    content: 'Models that can create new content (text, images, code) based on patterns learned from training data. At their core, they are probabilistic models predicting the next most likely token.',
+                    question: 'How is GenAI different from traditional machine learning?',
+                    answer: 'Traditional ML is often discriminative (predicting a label, like classification), while GenAI is creative (generating new data). GenAI models learn the underlying distribution of the data itself.'
+                },
+                {
+                    title: 'Agentic AI',
+                    content: 'An AI system that can perceive its environment, make decisions (plan), and take actions to achieve a goal. It often involves a loop of thought, action, and observation, and can use tools (like APIs or code execution).',
+                    question: 'What is the "ReAct" (Reason+Act) framework?',
+                    answer: 'ReAct is a popular agentic pattern where the LLM generates both a reasoning trace ("thought") and an action to take. The action is executed, the observation is fed back, and this loop continues until the goal is met. It makes the agent\'s behavior more interpretable and robust.'
+                },
+                {
+                    title: 'Retrieval-Augmented Generation (RAG)',
+                    content: 'A technique to improve LLM responses by first retrieving relevant information from an external knowledge base (like a vector database) and then passing that information as context to the LLM along with the user\'s query. This grounds the model in facts and reduces hallucinations.',
+                    question: 'Why is data "chunking" important in RAG?',
+                    answer: 'Chunking breaks large documents into smaller, semantically meaningful pieces. This is crucial because you retrieve and feed these chunks into the LLM\'s limited context window. Good chunking ensures the retrieved context is dense with relevant information and not filled with noise.'
+                },
+                 {
+                    title: 'Python for AI',
+                    content: 'Key libraries include PyTorch/TensorFlow (model building), Hugging Face Transformers (pre-trained models), LangChain (orchestration), FastAPI/Flask (API serving), and Pandas (data manipulation).',
+                    question: 'Why is `async` important in a library like FastAPI?',
+                    answer: 'Async allows the server to handle multiple requests concurrently. While waiting for one long-running task (like an LLM call or database query), it can start processing other requests instead of blocking, leading to much higher throughput.'
+                },
+                {
+                    title: 'API Development (REST)',
+                    content: 'Representational State Transfer is an architectural style for designing networked applications. Key principles include client-server architecture, statelessness, and using standard HTTP methods (GET, POST, PUT, DELETE).',
+                    question: 'What makes an API "RESTful"?',
+                    answer: 'A RESTful API adheres to REST constraints. This includes using standard HTTP verbs for actions, using URLs to identify resources (e.g., `/users/123`), and often using JSON for data exchange. It\'s about predictable, standardized communication.'
+                }
+            ];
             
-            <button class="btn number" onclick="appendToDisplay('1')">1</button>
-            <button class="btn number" onclick="appendToDisplay('2')">2</button>
-            <button class="btn number" onclick="appendToDisplay('3')">3</button>
-            <button class="btn equals" onclick="calculateResult()" rowspan="2">=</button>
-            
-            <button class="btn number zero" onclick="appendToDisplay('0')">0</button>
-            <button class="btn number" onclick="appendToDisplay('.')">.</button>
-        </div>
-    </div>
-    <script src="script.js"></script>
+            const conceptsContainer = document.getElementById('concepts-container');
+            conceptsData.forEach(concept => {
+                const conceptHtml = `
+                    <details class="group p-6 bg-white rounded-lg shadow-sm">
+                        <summary class="font-semibold text-lg cursor-pointer list-none flex justify-between items-center">
+                            ${concept.title}
+                            <span class="text-blue-500 group-open:rotate-180 transition-transform">▼</span>
+                        </summary>
+                        <div class="mt-4 border-t pt-4">
+                            <p class="text-gray-700">${concept.content}</p>
+                            <div class="mt-4 p-4 bg-blue-50 rounded-md border-l-4 border-blue-400">
+                                <p class="font-semibold text-blue-800">Potential Interview Question:</p>
+                                <p class="italic text-blue-700 mt-1">"${concept.question}"</p>
+                                <p class="mt-2 text-blue-900">${concept.answer}</p>
+                            </div>
+                        </div>
+                    </details>
+                `;
+                conceptsContainer.innerHTML += conceptHtml;
+            });
+
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const mobileNav = document.getElementById('mobile-nav');
+            const views = document.querySelectorAll('.view');
+
+            function switchView(hash) {
+                views.forEach(view => {
+                    if ('#' + view.id === hash) {
+                        view.classList.remove('hidden');
+                    } else {
+                        view.classList.add('hidden');
+                    }
+                });
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+                 mobileNav.value = hash;
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const hash = e.target.getAttribute('href');
+                    window.location.hash = hash;
+                });
+            });
+
+            mobileNav.addEventListener('change', (e) => {
+                window.location.hash = e.target.value;
+            });
+
+            window.addEventListener('hashchange', () => {
+                switchView(window.location.hash || '#dashboard');
+            });
+
+            switchView(window.location.hash || '#dashboard');
+
+            const countdownElement = document.getElementById('countdown');
+            let timeLeft = 18 * 60 * 60;
+
+            const timerInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval);
+                    countdownElement.textContent = "Time's Up!";
+                    return;
+                }
+                const hours = Math.floor(timeLeft / 3600);
+                const minutes = Math.floor((timeLeft % 3600) / 60);
+                const seconds = timeLeft % 60;
+
+                countdownElement.textContent = 
+                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        });
+
+        function toggleTimelineItem(element) {
+            const parent = element.closest('.timeline-item');
+            parent.classList.toggle('open');
+        }
+
+    </script>
 </body>
 </html>
